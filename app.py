@@ -1,28 +1,27 @@
 from flask import Flask, render_template, request, url_for, make_response, send_file
+from io import StringIO
 import os
 import pandas as pd
 import time
 import openpyxl
 import argparse
-import shutil
 
 app = Flask(__name__)
 app.config['IMPORTS_FOLDER'] = os.path.join(os.getcwd(), 'data', 'imports')
 app.config['EXPORTS_FOLDER'] = os.path.join(os.getcwd(), 'data', 'exports')
 
 
-def clean_csv(filepath):
+def clean_and_map_csv(filepath):
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 
     # Replace line separator and paragraph separator with newlines
     content = content.replace("\u2028", "\n").replace("\u2029", "\n")
 
-    cleaned_filepath = f"{os.path.splitext(filepath)[0]}_cleaned.csv"
-    with open(cleaned_filepath, "w", encoding="utf-8") as f:
-        f.write(content)
+    # Read cleaned content directly into a data frame
+    cleaned_df = pd.read_csv(StringIO(content))
 
-    return cleaned_filepath
+    return cleaned_df
 
 
 @app.route('/')
@@ -46,9 +45,8 @@ def upload_file():
 
         start_time = time.time()
 
-        # Clean the uploaded CSV file before mapping
-        cleaned_filepath = clean_csv(filepath)
-        uploaded_df = pd.read_csv(cleaned_filepath)
+        # Clean and map the uploaded CSV file
+        uploaded_df = clean_and_map_csv(filepath)
         columns_df = pd.read_csv(os.path.join('templates', 'columns.csv'))
 
 
@@ -133,6 +131,7 @@ def upload_file():
             else:
                 mapped_df[column] = default_values.get(column, None)
 
+
         # Set Original Document Reference Number value as NA based on Document Date
         if 'Document Type' in mapped_df.columns and 'Document Date' in mapped_df.columns:
             mapped_df['Original Document Reference Number'] = mapped_df['Original Document Reference Number'].fillna('')
@@ -151,7 +150,7 @@ def upload_file():
 
 
         # Forward-fill columns based on Document Number
-        mapped_df['Document Type'].replace('', pd.NA, inplace=True)
+        mapped_df['Document Type'] = mapped_df['Document Type'].replace('', pd.NA)
         columns_to_fill = ['Document Type', 'Document Date', 'Document Time', 'Document Currency Code', 'Invoice Total Amount Excluding Tax', 'Invoice Total Amount Including Tax', 'Invoice Total Payable Amount']
         mapped_df[columns_to_fill] = mapped_df.groupby('Document Number')[columns_to_fill].transform(lambda group: group.ffill())
 
@@ -165,7 +164,7 @@ def upload_file():
             for col_idx, value in enumerate(row, start=1):
                 sheet.cell(row=row_idx, column=col_idx, value=value)
 
-        output_filename = f"{os.path.splitext(os.path.basename(cleaned_filepath))[0]}_mapped.xlsx"
+        output_filename = f"{os.path.splitext(os.path.basename(filepath))[0]}_cleaned_mapped.xlsx"
         output_path = os.path.join(app.config['EXPORTS_FOLDER'], output_filename)
         workbook.save(output_path)
 
@@ -186,25 +185,31 @@ def download_file(filename):
     return send_file(filepath, as_attachment=True)
 
 
-def clear_folder(folder_path):
-    """Clear all files in the given folder."""
-    if os.path.exists(folder_path):
-        shutil.rmtree(folder_path)
-    os.makedirs(folder_path)
+def clear_folders():
+    exports_folder = app.config['EXPORTS_FOLDER']
+    imports_folder = app.config['IMPORTS_FOLDER']
+
+    for folder in [exports_folder, imports_folder]:
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.unlink(file_path)
+            except Exception as e:
+                print(f"Error deleting file {file_path}: {e}")
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Run the Flask app.')
-    parser.add_argument('--delete', action='store_true', help='Clear files in the exports and imports folders.')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run the Flask app or clear folders.")
+    parser.add_argument("--clear", action="store_true", help="Delete files in the exports and imports folders.")
     args = parser.parse_args()
 
-    if args.delete:
-        clear_folder(app.config['IMPORTS_FOLDER'])
-        clear_folder(app.config['EXPORTS_FOLDER'])
-        print("Cleared imports and exports folders.")
+    if args.clear:
+        clear_folders()
+        print("Successfully deleted files in the exports and imports folders.")
     else:
-        if not os.path.exists(app.config['IMPORTS_FOLDER']):
-            os.makedirs(app.config['IMPORTS_FOLDER'])
         if not os.path.exists(app.config['EXPORTS_FOLDER']):
             os.makedirs(app.config['EXPORTS_FOLDER'])
-        app.run(host='0.0.0.0', port=5000, debug=True)
+        if not os.path.exists(app.config['IMPORTS_FOLDER']):
+            os.makedirs(app.config['IMPORTS_FOLDER'])
+        app.run(debug=True)
