@@ -154,10 +154,11 @@ def upload_file():
         mapped_df[columns_to_fill] = mapped_df.groupby('Document Number')[columns_to_fill].transform(lambda group: group.ffill())
 
 
-        # After the entire mapping process is complete
+        # Create a new invoice line for Refund Note
         if 'Document Type' in mapped_df.columns:
             refund_rows = mapped_df[mapped_df['Document Type'].isin(['Refund Note'])]
-            refund_rows['Original Document Reference Number'] = refund_rows['Document Number'] + '-R'
+            refund_rows['Original Document Reference Number'] = refund_rows['Document Number']
+            refund_rows['Document Number'] = refund_rows['Document Number'] + '-R'
             mapped_df = pd.concat([mapped_df, refund_rows], ignore_index=True)
 
 
