@@ -154,12 +154,20 @@ def upload_file():
         mapped_df[columns_to_fill] = mapped_df.groupby('Document Number')[columns_to_fill].transform(lambda group: group.ffill())
 
 
-        # Create a new invoice line for Refund Note
+        # Ensure 'Document Type' and 'Document Number' are mapped correctly
+        if 'Document Type' in mapped_df.columns and 'Document Number' in mapped_df.columns:
+            mapped_df.loc[mapped_df['Document Type'] == 'Refund Note', 'Original Document Reference Number'] = mapped_df.groupby('Document Number')['Document Number'].transform('first')
+            mapped_df.loc[mapped_df['Document Type'] == 'Refund Note', 'Document Number'] = mapped_df['Document Number'] + '-R'
+
+
+        # Create new invoice lines for Refund Note and change Document Type to Invoice
         if 'Document Type' in mapped_df.columns:
-            refund_rows = mapped_df[mapped_df['Document Type'].isin(['Refund Note'])]
-            refund_rows['Original Document Reference Number'] = refund_rows['Document Number']
-            refund_rows['Document Number'] = refund_rows['Document Number'] + '-R'
-            mapped_df = pd.concat([mapped_df, refund_rows], ignore_index=True)
+            refund_rows = mapped_df[mapped_df['Document Type'] == 'Refund Note']
+            new_invoice_lines = refund_rows.copy()
+            new_invoice_lines['Document Type'] = 'Invoice'
+            new_invoice_lines['Document Number'] = new_invoice_lines['Document Number'].str.replace('-R', '', regex=False)
+            new_invoice_lines['Original Document Reference Number'] = ''
+            mapped_df = pd.concat([mapped_df, new_invoice_lines], ignore_index=True)
 
 
         # Autofill directly into B2C Sales -Template-new.xlsx
