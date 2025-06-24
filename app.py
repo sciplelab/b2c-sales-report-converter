@@ -231,4 +231,4 @@ if __name__ == "__main__":
             os.makedirs(app.config['EXPORTS_FOLDER'])
         if not os.path.exists(app.config['IMPORTS_FOLDER']):
             os.makedirs(app.config['IMPORTS_FOLDER'])
-        app.run(debug=True)
+        app.run(host='0.0.0.0', port=5000, debug=True)
