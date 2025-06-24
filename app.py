@@ -105,12 +105,11 @@ def upload_file():
             if matching_sources:
                 for source_column in matching_sources:
                     if source_column in uploaded_df.columns:
-                        
                         # Mapping for Financial Status:Document Type
                         if column == 'Document Type' and source_column == 'Financial Status':
                             mapped_df[column] = uploaded_df[source_column].map(
                                 {'paid': 'Invoice', 'refunded': 'Refund Note', 'partially_refunded': 'Refund Note'}).fillna('')
-                        
+
                         # Split Created at into Document Date & Document Time
                         elif column == 'Document Date' or column == 'Document Time':
                             if source_column == 'Created at':
@@ -153,6 +152,13 @@ def upload_file():
         mapped_df['Document Type'] = mapped_df['Document Type'].replace('', pd.NA)
         columns_to_fill = ['Document Type', 'Document Date', 'Document Time', 'Document Currency Code', 'Invoice Total Amount Excluding Tax', 'Invoice Total Amount Including Tax', 'Invoice Total Payable Amount']
         mapped_df[columns_to_fill] = mapped_df.groupby('Document Number')[columns_to_fill].transform(lambda group: group.ffill())
+
+
+        # After the entire mapping process is complete
+        if 'Document Type' in mapped_df.columns:
+            refund_rows = mapped_df[mapped_df['Document Type'].isin(['Refund Note'])]
+            refund_rows['Original Document Reference Number'] = refund_rows['Document Number'] + '-R'
+            mapped_df = pd.concat([mapped_df, refund_rows], ignore_index=True)
 
 
         # Autofill directly into B2C Sales -Template-new.xlsx
