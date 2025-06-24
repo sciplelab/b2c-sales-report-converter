@@ -83,6 +83,12 @@
         footer sub {
             color: #737373;
         }
+        .logo {
+            font-size: 36px; 
+            color: #171717; 
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
         .spinner {
             display: none;
             margin-top: 20px;
@@ -107,6 +113,9 @@
 </head>
 <body>
     <div class="container">
+        <div class="logo">
+            <i class="fa-solid fa-file-import"></i>
+        </div>
         <h2>B2C Sales Report Converter</h2>
         <p>Upload your Shopify .csv and click 'Convert' to transfer the data into a ClearTax B2C .xlsx template</p>
         <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="showSpinner()">
