@@ -105,12 +105,11 @@ def upload_file():
             if matching_sources:
                 for source_column in matching_sources:
                     if source_column in uploaded_df.columns:
-                        
                         # Mapping for Financial Status:Document Type
                         if column == 'Document Type' and source_column == 'Financial Status':
                             mapped_df[column] = uploaded_df[source_column].map(
-                                {'paid': 'Invoice', 'refunded': 'Refund Note', 'partially_refunded': 'Refund Note'}).fillna('')
-                        
+                                {'paid': 'Invoice', 'Custom (POS)': 'Invoice', 'refunded': 'Refund Note', 'partially_refunded': 'Refund Note', 'expired': 'Expired'}).fillna('')
+
                         # Split Created at into Document Date & Document Time
                         elif column == 'Document Date' or column == 'Document Time':
                             if source_column == 'Created at':
@@ -153,6 +152,26 @@ def upload_file():
         mapped_df['Document Type'] = mapped_df['Document Type'].replace('', pd.NA)
         columns_to_fill = ['Document Type', 'Document Date', 'Document Time', 'Document Currency Code', 'Invoice Total Amount Excluding Tax', 'Invoice Total Amount Including Tax', 'Invoice Total Payable Amount']
         mapped_df[columns_to_fill] = mapped_df.groupby('Document Number')[columns_to_fill].transform(lambda group: group.ffill())
+
+
+        # Ensure 'Document Type' and 'Document Number' are mapped correctly
+        if 'Document Type' in mapped_df.columns and 'Document Number' in mapped_df.columns:
+            mapped_df.loc[mapped_df['Document Type'] == 'Refund Note', 'Original Document Reference Number'] = mapped_df.groupby('Document Number')['Document Number'].transform('first')
+            mapped_df.loc[mapped_df['Document Type'] == 'Refund Note', 'Document Number'] = mapped_df['Document Number'] + '-R'
+
+
+        # Create new invoice lines for Refund Note and change Document Type to Invoice
+        if 'Document Type' in mapped_df.columns:
+            refund_rows = mapped_df[mapped_df['Document Type'] == 'Refund Note']
+            new_invoice_lines = refund_rows.copy()
+            new_invoice_lines['Document Type'] = 'Invoice'
+            new_invoice_lines['Document Number'] = new_invoice_lines['Document Number'].str.replace('-R', '', regex=False)
+            new_invoice_lines['Original Document Reference Number'] = ''
+            mapped_df = pd.concat([mapped_df, new_invoice_lines], ignore_index=True)
+
+
+        # Remove all rows where Document Type is 'Expired'
+        mapped_df = mapped_df[mapped_df['Document Type'] != 'Expired']
 
 
         # Autofill directly into B2C Sales -Template-new.xlsx
