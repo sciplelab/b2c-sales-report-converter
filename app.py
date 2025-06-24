@@ -108,7 +108,7 @@ def upload_file():
                         # Mapping for Financial Status:Document Type
                         if column == 'Document Type' and source_column == 'Financial Status':
                             mapped_df[column] = uploaded_df[source_column].map(
-                                {'paid': 'Invoice', 'Custom (POS)': 'Invoice', 'refunded': 'Refund Note', 'partially_refunded': 'Refund Note', 'expired': 'Expired'}).fillna('')
+                                {'paid': 'Invoice', 'Custom (POS)': 'Invoice', 'refunded': 'Refund Note', 'partially_refunded': 'Refund Note', 'expired': 'Expired', 'cancelled': 'Cancelled'}).fillna('')
 
                         # Split Created at into Document Date & Document Time
                         elif column == 'Document Date' or column == 'Document Time':
@@ -170,8 +170,8 @@ def upload_file():
             mapped_df = pd.concat([mapped_df, new_invoice_lines], ignore_index=True)
 
 
-        # Remove all rows where Document Type is 'Expired'
-        mapped_df = mapped_df[mapped_df['Document Type'] != 'Expired']
+        # Remove all rows where Document Type is 'Expired' or 'Cancelled'
+        mapped_df = mapped_df[~mapped_df['Document Type'].isin(['Expired', 'Cancelled'])]
 
 
         # Autofill directly into B2C Sales -Template-new.xlsx
