@@ -37,12 +37,14 @@
             margin-top: 20px;
             margin-bottom: 20px;
             gap: 10px;
+            flex-direction: column;
         }
         input[type="file"] {
             margin-bottom: 0;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            width: 100%;
         }
         button {
             background-color: #171717;
@@ -119,7 +121,10 @@
         <h2>B2C Sales Report Converter</h2>
         <p>Upload your Shopify .csv and click 'Convert' to transfer the data into a ClearTax B2C .xlsx template</p>
         <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="showSpinner()">
-            <input type="file" name="file" accept=".csv">
+            <label for="file">Upload Shopify .csv:</label>
+            <input type="file" id="file" name="file" accept=".csv">
+            <label for="buyers_file">Upload Buyer Details .csv (Optional):</label>
+            <input type="file" id="buyers_file" name="buyers_file" accept=".csv">
             <button type="submit">Convert</button>
         </form>
         {% if download_url %}
