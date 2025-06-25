@@ -82,6 +82,7 @@ def upload_file():
             "Supplier's MSIC code": "47734",
             "Supplier's Address Line 1": "9, Lorong 51A/227C, Seksyen 51A",
             "Supplier's City Name": "Petaling Jaya",
+            "Supplier's Postal Zone": "46100",
             "Supplier's State": "Selangor",
             "Supplier's Country": "Malaysia",
             "Supplier's Contact Number": "+60162992263",
