@@ -1,6 +1,6 @@
 # B2C Sales Report Converter
 
-This project is a Python Flask-based website where users can upload .csv files from Shopify to clean and map relevant columns to a .xlsx template file.
+This project is a Python Flask-based website where users can upload Shopify and Buyer Details .csv files to clean and map relevant columns to a ClearTax .xlsx template file.
 
 ## Setup
 1. Create a virtual environment using `python -m venv .venv`.
