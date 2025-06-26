@@ -162,7 +162,7 @@ def upload_file():
 
         # Forward-fill columns based on Document Number
         mapped_df['Document Type'] = mapped_df['Document Type'].replace('', pd.NA)
-        columns_to_fill = ['Document Type', 'Document Date', 'Document Time', 'Document Currency Code', 'Invoice Total Amount Excluding Tax', 'Invoice Total Amount Including Tax', 'Invoice Total Payable Amount']
+        columns_to_fill = ["Buyer's Name", "Buyer's Address Line 1", "Buyer's City", "Buyer's Postal Zone", "Buyer's State", "Buyer's Country", "Buyer's Contact Number", 'Document Type', 'Document Date', 'Document Time', 'Document Currency Code', 'Invoice Total Amount Excluding Tax', 'Invoice Total Amount Including Tax', 'Invoice Total Payable Amount']
         mapped_df[columns_to_fill] = mapped_df.groupby('Document Number')[columns_to_fill].transform(lambda group: group.ffill())
 
 
