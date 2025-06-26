@@ -156,7 +156,18 @@ def upload_file():
         if buyers_file and buyers_file.filename.endswith('.csv'):
             buyers_filepath = os.path.join(app.config['IMPORTS_FOLDER'], 'buyers.csv')
             buyers_file.save(buyers_filepath)
-            buyers_df = pd.read_csv(buyers_filepath)
+            
+            # Read buyers.csv with specific columns as strings to preserve leading zeros
+            dtype_mapping = {
+                'Mobile Number': str,
+                'ID': str,
+                'Postal Code': str
+            }
+            buyers_df = pd.read_csv(buyers_filepath, dtype=dtype_mapping)
+
+            # Remove dashes from ID if ID Type is NRIC
+            if 'ID Type' in buyers_df.columns and 'ID' in buyers_df.columns:
+                buyers_df.loc[buyers_df['ID Type'] == 'NRIC', 'ID'] = buyers_df.loc[buyers_df['ID Type'] == 'NRIC', 'ID'].str.replace('-', '', regex=False)
 
             # Match Name column in Shopify CSV with Receipt Number column in buyers.csv
             if 'Name' in uploaded_df.columns and 'Receipt Number' in buyers_df.columns:
