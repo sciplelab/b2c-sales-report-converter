@@ -57,6 +57,7 @@
             transition: background-color 0.2s ease;
             width: 90px; /* Fixed width for upload button */
             text-align: center;
+            margin-top: 15px;
         }
         button:hover {
             background-color: #2e2e2e;
@@ -104,6 +105,16 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+        label {
+            font-size: 16px;
+            color: #0a0a0a;
+            text-align: left;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
     </style>
     <script>
         function showSpinner() {
@@ -119,12 +130,16 @@
             <i class="fa-solid fa-file-import"></i>
         </div>
         <h2>B2C Sales Report Converter</h2>
-        <p>Upload your Shopify .csv and click 'Convert' to transfer the data into a ClearTax B2C .xlsx template</p>
+        <p>Upload your .csv files and click 'Convert' to transfer the data into a ClearTax B2C .xlsx template</p>
         <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="showSpinner()">
-            <label for="file">Upload Shopify .csv:</label>
-            <input type="file" id="file" name="file" accept=".csv">
-            <label for="buyers_file">Upload Buyer Details .csv (Optional):</label>
-            <input type="file" id="buyers_file" name="buyers_file" accept=".csv">
+            <div class="form-group">
+                <label for="file">Upload Shopify .csv:</label>
+                <input type="file" id="file" name="file" accept=".csv">
+            </div>
+            <div class="form-group">
+                <label for="buyers_file">Upload Buyer Details .csv (Optional):</label>
+                <input type="file" id="buyers_file" name="buyers_file" accept=".csv">
+            </div>
             <button type="submit">Convert</button>
         </form>
         {% if download_url %}
