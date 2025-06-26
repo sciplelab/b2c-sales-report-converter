@@ -179,7 +179,11 @@ def upload_file():
                 target_column = mapping['target']
                 source_column = mapping['source']
                 if source_column in merged_df.columns:
-                    mapped_df[target_column] = merged_df[source_column]
+                    # Skip mapping buyer details for Refund Note
+                    if 'Document Type' in mapped_df.columns:
+                        mapped_df[target_column] = merged_df[source_column].where(mapped_df['Document Type'] != 'Refund Note', None)
+                    else:
+                        mapped_df[target_column] = merged_df[source_column]
                 else:
                     mapped_df[target_column] = None
         else:
