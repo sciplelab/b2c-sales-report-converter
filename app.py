@@ -87,6 +87,8 @@ def upload_file():
             "Supplier's Country": "Malaysia",
             "Supplier's Contact Number": "+60162992263",
 
+            "Buyer's TIN": "EI00000000010",
+
             "Classification": "008",
             "Unit of Measurement": "EA",
             "Tax Type": "E",
@@ -102,7 +104,6 @@ def upload_file():
         # Buyer details mapping (columns.csv : buyers.csv)
         buyer_mapping = [
             {'target': "Buyer's Name", 'source': 'Full Name (as per ID)'},
-            {'target': "Buyer's TIN", 'source': 'Tax Identification Number (TIN)'},
             {'target': "Buyer's Registration Type", 'source': 'ID Type'},
             {'target': "Buyer's Registration Number", 'source': 'ID'},
             {'target': "Buyer's E-mail", 'source': 'Email Address'},
