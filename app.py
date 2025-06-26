@@ -57,9 +57,9 @@ def upload_file():
             {'source': 'Billing Address1', 'target': "Buyer's Address Line 1"},
             {'source': 'Billing City', 'target': "Buyer's City"},
             {'source': 'Billing Zip', 'target': "Buyer's Postal Zone"},
-            # {'source': '', 'target': "Buyer's State"},
-            # {'source': '', 'target': "Buyer's Country"},
-            # {'source': '', 'target': "Buyer's Contact Number"},
+            {'source': 'Billing Province', 'target': "Buyer's State"},
+            {'source': 'Billing Country', 'target': "Buyer's Country"},
+            {'source': 'Billing Phone', 'target': "Buyer's Contact Number"},
 
             {'source': 'Financial Status', 'target': 'Document Type'},
             {'source': 'Name', 'target': 'Document Number'},
@@ -141,15 +141,6 @@ def upload_file():
                         break
             else:
                 mapped_df[column] = default_values.get(column, None)
-
-
-
-        # Fill missing buyer details with default values
-        for default_column, default_value in default_values.items():
-            if default_column not in mapped_df.columns:
-                mapped_df[default_column] = default_value
-            else:
-                mapped_df[default_column] = mapped_df[default_column].fillna(default_value)
 
 
         # Set Original Document Reference Number value as NA based on Document Date
