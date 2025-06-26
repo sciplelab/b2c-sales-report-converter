@@ -99,6 +99,22 @@ def upload_file():
         }
 
 
+        # Buyer details mapping (columns.csv : buyers.csv)
+        buyer_mapping = [
+            {'target': "Buyer's Name", 'source': 'Full Name (as per ID)'},
+            {'target': "Buyer's TIN", 'source': 'Tax Identification Number (TIN)'},
+            {'target': "Buyer's Registration Type", 'source': 'ID Type'},
+            {'target': "Buyer's Registration Number", 'source': 'ID'},
+            {'target': "Buyer's E-mail", 'source': 'Email Address'},
+            {'target': "Buyer's Address Line 1", 'source': 'Address'},
+            {'target': "Buyer's City", 'source': 'City'},
+            {'target': "Buyer's Postal Zone", 'source': 'Postal Code'},
+            {'target': "Buyer's State", 'source': 'State'},
+            {'target': "Buyer's Country", 'source': 'Country'},
+            {'target': "Buyer's Contact Number", 'source': 'Mobile Number'}
+        ]
+
+
         # Dynamic mapping logic
         mapped_df = pd.DataFrame()
         for column in columns_df.columns:
@@ -130,6 +146,58 @@ def upload_file():
                         break
             else:
                 mapped_df[column] = default_values.get(column, None)
+
+
+
+        # BUYER DETAILS
+
+        # Handle buyers.csv file upload (optional)
+        buyers_file = request.files.get('buyers_file')
+        if buyers_file and buyers_file.filename.endswith('.csv'):
+            buyers_filepath = os.path.join(app.config['IMPORTS_FOLDER'], 'buyers.csv')
+            buyers_file.save(buyers_filepath)
+            
+            # Read buyers.csv with specific columns as strings to preserve leading zeros
+            dtype_mapping = {
+                'Mobile Number': str,
+                'ID': str,
+                'Postal Code': str
+            }
+            buyers_df = pd.read_csv(buyers_filepath, dtype=dtype_mapping)
+
+            # Remove dashes from ID if ID Type is NRIC
+            if 'ID Type' in buyers_df.columns and 'ID' in buyers_df.columns:
+                buyers_df.loc[buyers_df['ID Type'] == 'NRIC', 'ID'] = buyers_df.loc[buyers_df['ID Type'] == 'NRIC', 'ID'].str.replace('-', '', regex=False)
+
+            # Match Name column in Shopify CSV with Receipt Number column in buyers.csv
+            if 'Name' in uploaded_df.columns and 'Receipt Number' in buyers_df.columns:
+                merged_df = pd.merge(uploaded_df, buyers_df, left_on='Name', right_on='Receipt Number', how='left')
+            else:
+                merged_df = uploaded_df
+
+            # Populate buyer details into mapped_df
+            for mapping in buyer_mapping:
+                target_column = mapping['target']
+                source_column = mapping['source']
+                if source_column in merged_df.columns:
+                    mapped_df[target_column] = merged_df[source_column]
+                else:
+                    mapped_df[target_column] = None
+        else:
+            merged_df = uploaded_df
+
+            # Populate buyer details with None if buyers.csv is not provided
+            for mapping in buyer_mapping:
+                target_column = mapping['target']
+                mapped_df[target_column] = None
+
+        # Fill missing buyer details with default values
+        for default_column, default_value in default_values.items():
+            if default_column not in mapped_df.columns:
+                mapped_df[default_column] = default_value
+            else:
+                mapped_df[default_column] = mapped_df[default_column].fillna(default_value)
+
 
 
         # Set Original Document Reference Number value as NA based on Document Date
