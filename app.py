@@ -137,7 +137,7 @@ def upload_file():
                         elif column in ['Total Excluding Tax on Line Level', 'Amount Exempted from Tax/Taxable Amount'] and 'Lineitem price' in uploaded_df.columns and 'Discount Amount' in uploaded_df.columns:
                             mapped_df[column] = uploaded_df['Lineitem price'] - uploaded_df['Discount Amount'].fillna(0)
                         
-                        # Update column mapping logic for Buyer's Country
+                        # Handle ISO conversion from alpha-2 to alpha-3 for Buyer's Country
                         elif column == "Buyer's Country" and source_column == 'Billing Country':
                             def convert_to_alpha_3(alpha2):
                                 try:
@@ -148,6 +148,10 @@ def upload_file():
 
                             mapped_df[column] = uploaded_df[source_column].apply(convert_to_alpha_3)
                             break
+                        
+                        # Handle leading ' for Buyer's Postal Zone
+                        elif column == "Buyer's Postal Zone" and source_column == 'Billing Zip':
+                            mapped_df[column] = uploaded_df[source_column].str.lstrip("'")
                         
                         else:
                             mapped_df[column] = uploaded_df[source_column]
