@@ -151,7 +151,17 @@ def upload_file():
                         
                         # Handle leading ' for Buyer's Postal Zone
                         elif column == "Buyer's Postal Zone" and source_column == 'Billing Zip':
-                            mapped_df[column] = uploaded_df[source_column].str.lstrip("'")
+                            mapped_df[column] = uploaded_df[source_column].astype(str).str.lstrip("'")
+                        
+                        # Add mapping table for Buyer's State in Malaysia
+                        elif column == "Buyer's State" and source_column == 'Billing Province':
+                            state_mapping = {
+                                'JHR': '01', 'KDH': '02', 'KTN': '03', 'MLK': '04', 'NSN': '05', 
+                                'PHG': '06', 'PNG': '07', 'PRK': '08', 'PLS': '09', 'SGR': '10', 
+                                'TRG': '11', 'SBH': '12', 'SWK': '13', 'KUL': '14', 'LBN': '15', 
+                                'PJY': '16' 
+                            }
+                            mapped_df[column] = uploaded_df[source_column].map(state_mapping).fillna('17')
                         
                         else:
                             mapped_df[column] = uploaded_df[source_column]
