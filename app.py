@@ -5,6 +5,7 @@ import pandas as pd
 import time
 import openpyxl
 import argparse
+import pycountry
 
 app = Flask(__name__)
 app.config['IMPORTS_FOLDER'] = os.path.join(os.getcwd(), 'data', 'imports')
@@ -135,6 +136,18 @@ def upload_file():
                         # Calculate Total.. and Amount Exempted.. from Lineitem price - Discount Amount
                         elif column in ['Total Excluding Tax on Line Level', 'Amount Exempted from Tax/Taxable Amount'] and 'Lineitem price' in uploaded_df.columns and 'Discount Amount' in uploaded_df.columns:
                             mapped_df[column] = uploaded_df['Lineitem price'] - uploaded_df['Discount Amount'].fillna(0)
+                        
+                        # Update column mapping logic for Buyer's Country
+                        elif column == "Buyer's Country" and source_column == 'Billing Country':
+                            def convert_to_alpha_3(alpha2):
+                                try:
+                                    country = pycountry.countries.get(alpha_2=alpha2)
+                                    return country.alpha_3 if country else None
+                                except LookupError:
+                                    return None
+
+                            mapped_df[column] = uploaded_df[source_column].apply(convert_to_alpha_3)
+                            break
                         
                         else:
                             mapped_df[column] = uploaded_df[source_column]
