@@ -151,8 +151,9 @@ def upload_file():
                         
                         # Handle leading ' for Buyer's Postal Zone
                         elif column == "Buyer's Postal Zone" and source_column == 'Billing Zip':
-                            mapped_df[column] = uploaded_df[source_column].astype(str).str.lstrip("'")
-                        
+                            cleaned_series = uploaded_df[source_column].astype(str).str.lstrip("'").replace(['', 'nan'], pd.NA)
+                            mapped_df[column] = cleaned_series
+
                         # Add mapping table for Buyer's State in Malaysia
                         elif column == "Buyer's State" and source_column == 'Billing Province':
                             state_mapping = {
@@ -161,7 +162,8 @@ def upload_file():
                                 'TRG': '11', 'SBH': '12', 'SWK': '13', 'KUL': '14', 'LBN': '15', 
                                 'PJY': '16' 
                             }
-                            mapped_df[column] = uploaded_df[source_column].map(state_mapping).fillna('17')
+                            cleaned_series = uploaded_df[source_column].map(state_mapping).replace('', pd.NA)
+                            mapped_df[column] = cleaned_series.dropna()
                         
                         else:
                             mapped_df[column] = uploaded_df[source_column]
@@ -190,7 +192,7 @@ def upload_file():
         # Forward-fill columns based on Document Number
         mapped_df['Document Type'] = mapped_df['Document Type'].replace('', pd.NA)
         columns_to_fill = ["Buyer's Name", "Buyer's Address Line 1", "Buyer's City", "Buyer's Postal Zone", "Buyer's State", "Buyer's Country", "Buyer's Contact Number", 'Document Type', 'Document Date', 'Document Time', 'Document Currency Code', 'Invoice Total Amount Excluding Tax', 'Invoice Total Amount Including Tax', 'Invoice Total Payable Amount']
-        mapped_df[columns_to_fill] = mapped_df.groupby('Document Number')[columns_to_fill].transform(lambda group: group.ffill())
+        mapped_df[columns_to_fill] = mapped_df.groupby('Document Number')[columns_to_fill].transform(lambda group: group.ffill().fillna(''))
 
 
         # Ensure 'Document Type' and 'Document Number' are mapped correctly
