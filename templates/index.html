@@ -184,7 +184,7 @@
                 <i class="fa-solid fa-file-import"></i>
             </div>
             <h2>B2C Sales Report Converter</h2>
-            <p>Upload your Shopify .csv and click 'Convert' to transfer the data into a ClearTax B2C .xlsx template</p>
+            <p>Upload your Shopify .csv and click 'Convert' to transfer the data into a ClearTax B2C .xlsx template.</p>
             <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="showSpinner()">
                 <input type="file" name="file" accept=".csv">
                 <button type="submit" style="width: 90px;">Convert</button>
@@ -207,7 +207,7 @@
     <div id="history" class="tab-content" style="display:none;">
         <div class="container">
             <h2>File History</h2>
-            <p>View and download previously converted files</p>
+            <p>{% if not file_urls %}No files have been converted yet.{% else %}View and download previously converted files.{% endif %}</p>
             {% if file_urls %}
             <ul>
                 {% for file_url in file_urls %}
@@ -217,7 +217,9 @@
                 {% endfor %}
             </ul>
             <form action="/delete-all" method="post" style="margin-top: 20px;">
-                <button type="submit" style="background-color: #dc3545; color: white; padding: 10px 20px; border-radius: 5px;">Delete All</button>
+                <button type="submit" style="background-color: #dc3545; color: white; padding: 10px 20px; border-radius: 5px;">
+                    <i class="fa-solid fa-trash" style="margin-right: 5px;"></i> Delete All
+                </button>
             </form>
             {% endif %}
         </div>
