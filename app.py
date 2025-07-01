@@ -36,7 +36,7 @@ def clean_and_map_csv(filepath):
 
 @app.route('/')
 def index():
-    logging.info("Rendering index page")
+    logging.info("Rendering index")
     exports_folder = app.config['EXPORTS_FOLDER']
     file_urls = sorted(
         [url_for('download_file', filename=os.path.basename(file)) for file in glob.glob(os.path.join(exports_folder, '*.xlsx'))],
