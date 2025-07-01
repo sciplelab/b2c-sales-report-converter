@@ -7,6 +7,7 @@ import openpyxl
 import argparse
 import pycountry
 import logging
+import glob
 
 app = Flask(__name__)
 app.config['IMPORTS_FOLDER'] = os.path.join(os.getcwd(), 'data', 'imports')
@@ -36,7 +37,13 @@ def clean_and_map_csv(filepath):
 @app.route('/')
 def index():
     logging.info("Rendering index page")
-    return render_template('index.html')
+    exports_folder = app.config['EXPORTS_FOLDER']
+    file_urls = sorted(
+        [url_for('download_file', filename=os.path.basename(file)) for file in glob.glob(os.path.join(exports_folder, '*.xlsx'))],
+        key=lambda file: os.path.getmtime(os.path.join(exports_folder, file.split('/')[-1])),
+        reverse=True
+    )
+    return render_template('index.html', file_urls=file_urls)
 
 
 @app.route('/upload', methods=['POST'])
@@ -243,7 +250,9 @@ def upload_file():
             for col_idx, value in enumerate(row, start=1):
                 sheet.cell(row=row_idx, column=col_idx, value=value)
 
-        output_filename = f"{os.path.splitext(os.path.basename(filepath))[0]}_cleaned_mapped.xlsx"
+        # Add a timestamp to the output file name for uniqueness
+        timestamp = time.strftime('%Y%m%d_%H%M%S')
+        output_filename = f"{os.path.splitext(os.path.basename(filepath))[0]}_{timestamp}.xlsx"
         output_path = os.path.join(app.config['EXPORTS_FOLDER'], output_filename)
         workbook.save(output_path)
 
@@ -251,7 +260,14 @@ def upload_file():
 
         runtime = round(time.time() - start_time, 3)
 
-        return render_template('index.html', download_url=url_for('download_file', filename=output_filename), runtime=runtime)
+        # Refresh and sort file URLs for the index page
+        file_urls = sorted(
+            [url_for('download_file', filename=os.path.basename(file)) for file in glob.glob(os.path.join(app.config['EXPORTS_FOLDER'], '*.xlsx'))],
+            key=lambda file: os.path.getmtime(os.path.join(app.config['EXPORTS_FOLDER'], file.split('/')[-1])),
+            reverse=True
+        )
+
+        return render_template('index.html', file_urls=file_urls, download_url=url_for('download_file', filename=output_filename), runtime=runtime)
     return make_response("<script>alert('Invalid file format. Please upload a .csv file.'); window.location.href='/';</script>")
 
 
@@ -264,6 +280,23 @@ def download_file(filename):
         return make_response("<script>alert('File not found.'); window.location.href='/';</script>")
 
     return send_file(filepath, as_attachment=True)
+
+
+@app.route('/delete/<filename>', methods=['POST'])
+def delete_file(filename):
+    logging.info(f"Deleting file: {filename}")
+    filepath = os.path.join(app.config['EXPORTS_FOLDER'], filename)
+
+    if not os.path.exists(filepath):
+        return make_response("<script>alert('File not found.'); window.location.href='/';</script>")
+
+    try:
+        os.remove(filepath)
+        logging.info(f"File deleted: {filename}")
+        return make_response("<script>alert('Successfully deleted file.'); window.location.href='/';</script>")
+    except Exception as e:
+        logging.error(f"Error deleting file {filename}: {e}")
+        return make_response("<script>alert('Error deleting file.'); window.location.href='/';</script>")
 
 
 def clear_folders():

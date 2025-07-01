@@ -53,7 +53,7 @@
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.2s ease;
-            width: 90px; /* Fixed width for upload button */
+            width: auto;
             text-align: center;
         }
         button:hover {
@@ -102,6 +102,40 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+        .tabs {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            margin-right: 20px; /* Add spacing next to the tabs */
+        }
+        .tab-button {
+            background-color: #171717;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+            width: 100%;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .tab-button:hover {
+            background-color: #2e2e2e;
+        }
+        .tab-content {
+            display: none;
+            text-align: left;
+        }
+        .tab-content ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .tab-content li {
+            margin: 10px 0;
+        }
     </style>
     <script>
         function showSpinner() {
@@ -109,31 +143,63 @@
             button.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
             button.disabled = true;
         }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
+            document.getElementById(tabId).style.display = 'block';
+        }
     </script>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">
-            <i class="fa-solid fa-file-import"></i>
+    <div class="tabs">
+        <button class="tab-button" onclick="showTab('upload')">Home</button>
+        <button class="tab-button" onclick="showTab('history')">File History</button>
+    </div>
+
+    <div id="upload" class="tab-content" style="display:block;">
+        <div class="container">
+            <div class="logo">
+                <i class="fa-solid fa-file-export"></i>
+            </div>
+            <h2>B2C Sales Report Converter</h2>
+            <p>Upload your Shopify .csv and click 'Convert' to transfer the data into a ClearTax B2C .xlsx template</p>
+            <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="showSpinner()">
+                <input type="file" name="file" accept=".csv">
+                <button type="submit" style="width: 90px;">Convert</button>
+            </form>
+            {% if download_url %}
+            <div class="text-center mt-3 margins">
+                <a href="{{ download_url }}" class="btn btn-success btn-lg">
+                    <i class="fa-solid fa-download" style="margin-right: 5px;"></i> Download File
+                </a>
+            </div>
+            {% endif %}
+            {% if runtime %}
+            <footer>
+                <sub>Completed in <b>{{ runtime }}</b> seconds</sub>
+            </footer>
+            {% endif %}
         </div>
-        <h2>B2C Sales Report Converter</h2>
-        <p>Upload your Shopify .csv and click 'Convert' to transfer the data into a ClearTax B2C .xlsx template</p>
-        <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="showSpinner()">
-            <input type="file" name="file" accept=".csv">
-            <button type="submit">Convert</button>
-        </form>
-        {% if download_url %}
-        <div class="text-center mt-3 margins">
-            <a href="{{ download_url }}" class="btn btn-success btn-lg">
-                <i class="fa-solid fa-download" style="margin-right: 5px;"></i> Download File
-            </a>
+    </div>
+
+    <div id="history" class="tab-content" style="display:none;">
+        <div class="container">
+            <div class="logo">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <h2>File History</h2>
+            <p>View and download previously converted files</p>
+            <ul>
+                {% for file_url in file_urls %}
+                    <li>
+                        <a href="{{ file_url }}" target="_blank">{{ file_url.split('/')[-1] }}</a>
+                        <form action="/delete/{{ file_url.split('/')[-1] }}" method="post" style="display:inline;">
+                            <button type="submit" style="background-color: #dc3545">Delete</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
         </div>
-        {% endif %}
-        {% if runtime %}
-        <footer>
-            <sub>Completed in <b>{{ runtime }}</b> seconds</sub>
-        </footer>
-        {% endif %}
     </div>
 </body>
 </html>
