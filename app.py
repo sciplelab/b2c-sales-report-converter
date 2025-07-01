@@ -268,14 +268,15 @@ def clear_folders():
     imports_folder = app.config['IMPORTS_FOLDER']
 
     for folder in [exports_folder, imports_folder]:
-        for filename in os.listdir(folder):
-            file_path = os.path.join(folder, filename)
-            try:
+        try:
+            files = os.listdir(folder)
+            for filename in files:
+                file_path = os.path.join(folder, filename)
                 if os.path.isfile(file_path):
                     os.unlink(file_path)
-            except Exception as e:
-                logging.error(f"Error deleting file {file_path}: {e}")
-    logging.info(f"Deleted {len(os.listdir(exports_folder))} exports and {len(os.listdir(imports_folder))} imports files")
+            logging.info(f"Deleted {len(files)} files from {folder}")
+        except Exception as e:
+            logging.error(f"Error clearing folder {folder}: {e}")
 
 
 if __name__ == "__main__":
