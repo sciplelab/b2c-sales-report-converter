@@ -122,7 +122,7 @@
             cursor: pointer;
             font-size: 14px;
             width: 100%;
-            text-align: center;
+            text-align: left;
             margin-bottom: 5px;
         }
         .tab-button.active, .tab-button:active {
@@ -143,7 +143,7 @@
         .tab-content ul {
             list-style-type: none;
             padding: 0;
-            max-height: 100px;
+            max-height: 150px;
             overflow-y: auto;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -170,14 +170,18 @@
 </head>
 <body>
     <div class="tabs">
-        <button class="tab-button active" onclick="showTab('upload')">Home</button>
-        <button class="tab-button" onclick="showTab('history')">File History</button>
+        <button class="tab-button active" onclick="showTab('upload')">
+            <i class="fa-solid fa-home" style="margin-right: 5px;"></i> Home
+        </button>
+        <button class="tab-button" onclick="showTab('history')">
+            <i class="fa-solid fa-history" style="margin-right: 5px;"></i> File History
+        </button>
     </div>
 
     <div id="upload" class="tab-content" style="display:block;">
         <div class="container">
             <div class="logo">
-                <i class="fa-solid fa-file-export"></i>
+                <i class="fa-solid fa-file-import"></i>
             </div>
             <h2>B2C Sales Report Converter</h2>
             <p>Upload your Shopify .csv and click 'Convert' to transfer the data into a ClearTax B2C .xlsx template</p>
@@ -202,9 +206,6 @@
 
     <div id="history" class="tab-content" style="display:none;">
         <div class="container">
-            <div class="logo">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-            </div>
             <h2>File History</h2>
             <p>View and download previously converted files</p>
             {% if file_urls %}
