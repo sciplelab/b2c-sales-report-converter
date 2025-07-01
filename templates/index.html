@@ -192,13 +192,13 @@
             <ul>
                 {% for file_url in file_urls %}
                     <li>
-                        <a href="{{ file_url }}" target="_blank">{{ file_url.split('/')[-1] }}</a>
-                        <form action="/delete/{{ file_url.split('/')[-1] }}" method="post" style="display:inline;">
-                            <button type="submit" style="background-color: #dc3545">Delete</button>
-                        </form>
+                        <a href="{{ file_url }}" target="_blank" style="margin-right: 5px;">{{ file_url.split('/')[-1] }}</a>
                     </li>
                 {% endfor %}
             </ul>
+            <form action="/delete-all" method="post" style="margin-top: 20px;">
+                <button type="submit" style="background-color: #dc3545; color: white; padding: 10px 20px; border-radius: 5px;">Delete All</button>
+            </form>
         </div>
     </div>
 </body>

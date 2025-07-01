@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, url_for, make_response, send_file
+from flask import Flask, render_template, request, url_for, make_response, send_file, redirect
 from io import StringIO
 import os
 import pandas as pd
@@ -282,21 +282,10 @@ def download_file(filename):
     return send_file(filepath, as_attachment=True)
 
 
-@app.route('/delete/<filename>', methods=['POST'])
-def delete_file(filename):
-    logging.info(f"Deleting file: {filename}")
-    filepath = os.path.join(app.config['EXPORTS_FOLDER'], filename)
-
-    if not os.path.exists(filepath):
-        return make_response("<script>alert('File not found.'); window.location.href='/';</script>")
-
-    try:
-        os.remove(filepath)
-        logging.info(f"File deleted: {filename}")
-        return make_response("<script>alert('Successfully deleted file.'); window.location.href='/';</script>")
-    except Exception as e:
-        logging.error(f"Error deleting file {filename}: {e}")
-        return make_response("<script>alert('Error deleting file.'); window.location.href='/';</script>")
+@app.route('/delete-all', methods=['POST'])
+def delete_all_files():
+    clear_folders()
+    return redirect(url_for('index'))
 
 
 def clear_folders():
