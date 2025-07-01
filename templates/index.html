@@ -132,6 +132,10 @@
         .tab-content ul {
             list-style-type: none;
             padding: 0;
+            max-height: 100px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
         .tab-content li {
             margin: 10px 0;
@@ -189,6 +193,7 @@
             </div>
             <h2>File History</h2>
             <p>View and download previously converted files</p>
+            {% if file_urls %}
             <ul>
                 {% for file_url in file_urls %}
                     <li>
@@ -199,6 +204,7 @@
             <form action="/delete-all" method="post" style="margin-top: 20px;">
                 <button type="submit" style="background-color: #dc3545; color: white; padding: 10px 20px; border-radius: 5px;">Delete All</button>
             </form>
+            {% endif %}
         </div>
     </div>
 </body>
