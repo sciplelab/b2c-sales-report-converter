@@ -121,6 +121,58 @@ def upload_file():
         }
 
 
+        def map_column(uploaded_df, column, source_column):
+            # Mapping for Financial Status:Document Type
+            if column == 'Document Type' and source_column == 'Financial Status':
+                return uploaded_df[source_column].map(
+                    {'paid': 'Invoice', 'Custom (POS)': 'Invoice', 'refunded': 'Refund Note', 'partially_refunded': 'Refund Note', 'expired': 'Expired', 'cancelled': 'Cancelled'}).fillna('')
+
+            # Split Created at into Document Date & Document Time
+            if column == 'Document Date' or column == 'Document Time':
+                if source_column == 'Created at':
+                    if column == 'Document Date':
+                        return uploaded_df[source_column].str.split(' ').str[0]
+                    elif column == 'Document Time':
+                        return uploaded_df[source_column].str.split(' ').str[1]
+
+            # Calculate Subtotal.. from Lineitem price * Lineitem quantity
+            if column == 'Subtotal excluding taxes discounts & charges' and 'Lineitem price' in uploaded_df.columns and 'Lineitem quantity' in uploaded_df.columns:
+                return uploaded_df['Lineitem price'] * uploaded_df['Lineitem quantity']
+
+            # Calculate Total.. and Amount Exempted.. from Lineitem price - Discount Amount
+            if column in ['Total Excluding Tax on Line Level', 'Amount Exempted from Tax/Taxable Amount'] and 'Lineitem price' in uploaded_df.columns and 'Discount Amount' in uploaded_df.columns:
+                return uploaded_df['Lineitem price'] - uploaded_df['Discount Amount'].fillna(0)
+
+            # ISO conversion from alpha-2 to alpha-3 for Buyer's Country
+            if column == "Buyer's Country" and source_column == 'Billing Country':
+                def convert_to_alpha_3(alpha2):
+                    try:
+                        country = pycountry.countries.get(alpha_2=alpha2)
+                        return country.alpha_3 if country else None
+                    except LookupError:
+                        return None
+
+                return uploaded_df[source_column].apply(convert_to_alpha_3)
+
+            # Remove leading ' for Buyer's Postal Zone
+            if column == "Buyer's Postal Zone" and source_column == 'Billing Zip':
+                cleaned_series = uploaded_df[source_column].astype(str).str.lstrip("'").replace(['', 'nan'], pd.NA)
+                return cleaned_series
+
+            # Mapping table for Buyer's State in Malaysia
+            if column == "Buyer's State" and source_column == 'Billing Province':
+                state_mapping = {
+                    'JHR': '01', 'KDH': '02', 'KTN': '03', 'MLK': '04', 'NSN': '05', 
+                    'PHG': '06', 'PNG': '07', 'PRK': '08', 'PLS': '09', 'SGR': '10', 
+                    'TRG': '11', 'SBH': '12', 'SWK': '13', 'KUL': '14', 'LBN': '15', 
+                    'PJY': '16' 
+                }
+                cleaned_series = uploaded_df[source_column].map(state_mapping).replace('', pd.NA)
+                return cleaned_series.dropna()
+
+            return uploaded_df[source_column]
+
+
         # Dynamic mapping logic
         mapped_df = pd.DataFrame()
         for column in columns_df.columns:
@@ -128,55 +180,7 @@ def upload_file():
             if matching_sources:
                 for source_column in matching_sources:
                     if source_column in uploaded_df.columns:
-                        # Mapping for Financial Status:Document Type
-                        if column == 'Document Type' and source_column == 'Financial Status':
-                            mapped_df[column] = uploaded_df[source_column].map(
-                                {'paid': 'Invoice', 'Custom (POS)': 'Invoice', 'refunded': 'Refund Note', 'partially_refunded': 'Refund Note', 'expired': 'Expired', 'cancelled': 'Cancelled'}).fillna('')
-
-                        # Split Created at into Document Date & Document Time
-                        elif column == 'Document Date' or column == 'Document Time':
-                            if source_column == 'Created at':
-                                mapped_df['Document Date'] = uploaded_df[source_column].str.split(' ').str[0]
-                                mapped_df['Document Time'] = uploaded_df[source_column].str.split(' ').str[1]
-                        
-                        # Calculate Subtotal.. from Lineitem price * Lineitem quantity
-                        elif column == 'Subtotal excluding taxes discounts & charges' and 'Lineitem price' in uploaded_df.columns and 'Lineitem quantity' in uploaded_df.columns:
-                            mapped_df[column] = uploaded_df['Lineitem price'] * uploaded_df['Lineitem quantity']
-                        
-                        # Calculate Total.. and Amount Exempted.. from Lineitem price - Discount Amount
-                        elif column in ['Total Excluding Tax on Line Level', 'Amount Exempted from Tax/Taxable Amount'] and 'Lineitem price' in uploaded_df.columns and 'Discount Amount' in uploaded_df.columns:
-                            mapped_df[column] = uploaded_df['Lineitem price'] - uploaded_df['Discount Amount'].fillna(0)
-                        
-                        # Handle ISO conversion from alpha-2 to alpha-3 for Buyer's Country
-                        elif column == "Buyer's Country" and source_column == 'Billing Country':
-                            def convert_to_alpha_3(alpha2):
-                                try:
-                                    country = pycountry.countries.get(alpha_2=alpha2)
-                                    return country.alpha_3 if country else None
-                                except LookupError:
-                                    return None
-
-                            mapped_df[column] = uploaded_df[source_column].apply(convert_to_alpha_3)
-                            break
-                        
-                        # Handle leading ' for Buyer's Postal Zone
-                        elif column == "Buyer's Postal Zone" and source_column == 'Billing Zip':
-                            cleaned_series = uploaded_df[source_column].astype(str).str.lstrip("'").replace(['', 'nan'], pd.NA)
-                            mapped_df[column] = cleaned_series
-
-                        # Add mapping table for Buyer's State in Malaysia
-                        elif column == "Buyer's State" and source_column == 'Billing Province':
-                            state_mapping = {
-                                'JHR': '01', 'KDH': '02', 'KTN': '03', 'MLK': '04', 'NSN': '05', 
-                                'PHG': '06', 'PNG': '07', 'PRK': '08', 'PLS': '09', 'SGR': '10', 
-                                'TRG': '11', 'SBH': '12', 'SWK': '13', 'KUL': '14', 'LBN': '15', 
-                                'PJY': '16' 
-                            }
-                            cleaned_series = uploaded_df[source_column].map(state_mapping).replace('', pd.NA)
-                            mapped_df[column] = cleaned_series.dropna()
-                        
-                        else:
-                            mapped_df[column] = uploaded_df[source_column]
+                        mapped_df[column] = map_column(uploaded_df, column, source_column)
                         break
             else:
                 mapped_df[column] = default_values.get(column, None)
