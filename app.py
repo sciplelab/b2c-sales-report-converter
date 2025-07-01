@@ -6,6 +6,7 @@ import time
 import openpyxl
 import argparse
 import pycountry
+import logging
 
 app = Flask(__name__)
 app.config['IMPORTS_FOLDER'] = os.path.join(os.getcwd(), 'data', 'imports')
@@ -14,8 +15,12 @@ app.config['EXPORTS_FOLDER'] = os.path.join(os.getcwd(), 'data', 'exports')
 # Set pandas option to opt into future behavior for downcasting
 pd.set_option('future.no_silent_downcasting', True)
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S')
+
 
 def clean_and_map_csv(filepath):
+    logging.info(f"Cleaning and mapping CSV file: {filepath}")
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 
@@ -30,11 +35,13 @@ def clean_and_map_csv(filepath):
 
 @app.route('/')
 def index():
+    logging.info("Rendering index page")
     return render_template('index.html')
 
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    logging.info("Handling file upload")
     if 'file' not in request.files:
         return make_response("<script>alert('No file attachment in request.'); window.location.href='/';</script>")
 
@@ -236,6 +243,7 @@ def upload_file():
         output_path = os.path.join(app.config['EXPORTS_FOLDER'], output_filename)
         workbook.save(output_path)
 
+        logging.info(f"File uploaded and processed: {filepath}")
 
         runtime = round(time.time() - start_time, 3)
 
@@ -245,6 +253,7 @@ def upload_file():
 
 @app.route('/download/<filename>')
 def download_file(filename):
+    logging.info(f"Downloading file: {filename}")
     filepath = os.path.join(app.config['EXPORTS_FOLDER'], filename)
 
     if not os.path.exists(filepath):
@@ -254,6 +263,7 @@ def download_file(filename):
 
 
 def clear_folders():
+    logging.info("Clearing folders")
     exports_folder = app.config['EXPORTS_FOLDER']
     imports_folder = app.config['IMPORTS_FOLDER']
 
@@ -264,17 +274,18 @@ def clear_folders():
                 if os.path.isfile(file_path):
                     os.unlink(file_path)
             except Exception as e:
-                print(f"Error deleting file {file_path}: {e}")
+                logging.error(f"Error deleting file {file_path}: {e}")
+    logging.info(f"Deleted {len(os.listdir(exports_folder))} exports and {len(os.listdir(imports_folder))} imports files")
 
 
 if __name__ == "__main__":
+    logging.info("Starting Flask application")
     parser = argparse.ArgumentParser(description="Run the Flask app or clear folders.")
     parser.add_argument("--clear", action="store_true", help="Delete files in the exports and imports folders.")
     args = parser.parse_args()
 
     if args.clear:
         clear_folders()
-        print("Successfully deleted files in the exports and imports folders.")
     else:
         if not os.path.exists(app.config['EXPORTS_FOLDER']):
             os.makedirs(app.config['EXPORTS_FOLDER'])
