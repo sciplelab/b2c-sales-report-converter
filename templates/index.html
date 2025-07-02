@@ -169,17 +169,20 @@
     </style>
     <script>
         function showSpinner() {
-            const button = document.querySelector('form button');
-            button.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
-            button.disabled = true;
+            Object.assign(document.querySelector('form button'), {
+                innerHTML: '<i class="fa fa-spinner fa-spin"></i>',
+                disabled: true
+            });
         }
 
         function showTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-            document.getElementById(tabId).style.display = 'block';
+            document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = tab.id === tabId ? 'block' : 'none');
+            document.querySelectorAll('.tab-button').forEach(button => button.classList.toggle('active', button.getAttribute('onclick') === `showTab('${tabId}')`));
+        }
 
-            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
-            document.querySelector(`.tab-button[onclick="showTab('${tabId}')"]`).classList.add('active');
+        function downloadFile(url) {
+            const link = Object.assign(document.createElement('a'), { href: url, download: '' });
+            link.click();
         }
     </script>
 </head>
@@ -227,7 +230,9 @@
             <ul>
                 {% for file_url in file_urls %}
                     <li>
-                        <a href="{{ file_url }}" target="_blank" class="links">{{ file_url.split('/')[-1] }}</a>
+                        <a href="javascript:void(0)" onclick="downloadFile('{{ file_url }}')" class="links">
+                            {{ file_url.split('/')[-1] }}
+                        </a>
                     </li>
                 {% endfor %}
             </ul>
