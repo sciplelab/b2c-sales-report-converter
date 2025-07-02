@@ -161,6 +161,11 @@
         .delete-btn:hover {
             background-color: #c82333;
         }
+        .links {
+            margin-right: 5px; 
+            text-decoration: none; 
+            color: #1369eb;
+        }
     </style>
     <script>
         function showSpinner() {
@@ -222,7 +227,7 @@
             <ul>
                 {% for file_url in file_urls %}
                     <li>
-                        <a href="{{ file_url }}" target="_blank" style="margin-right: 5px;">{{ file_url.split('/')[-1] }}</a>
+                        <a href="{{ file_url }}" target="_blank" class="links">{{ file_url.split('/')[-1] }}</a>
                     </li>
                 {% endfor %}
             </ul>
